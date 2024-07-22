@@ -1,0 +1,10 @@
+#Approach
+
+Suggestion 1:
+We frame the problem of finding lower bounds for the algorithm MIS using reinforcement learning (RL) as follows:
+* State: A partially constructed graph
+* Action: Adding vertices or edges to the graph
+* Reward: A measure of the graph's difficulty for the given algorithm (most difficult part)
+* Goal: Construct a graph that maximizes the algorithm's runtime
+This formulation allows the RL agent to iteratively build graphs that challenge the MIS algorithm.
+
