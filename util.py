@@ -2,6 +2,8 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import random
 import pulp
+import os
+from matplotlib.animation import FuncAnimation
 
 def generate_random_graph(num_nodes, edge_probability):
     G = nx.Graph()
@@ -20,6 +22,19 @@ def visualize_graph(G, title, selected_nodes=None):
         nx.draw_networkx_nodes(G, pos, nodelist=selected_nodes, node_color='red', node_size=500)
     plt.title(title)
     plt.show()
+
+def visualize_graph_and_save(G, title, selected_nodes=None, folder='graph_images', step_num=0):
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+    
+    pos = nx.spring_layout(G)
+    plt.figure(figsize=(10, 6))
+    nx.draw(G, pos, with_labels=True, node_color='lightblue', node_size=500)
+    if selected_nodes:
+        nx.draw_networkx_nodes(G, pos, nodelist=selected_nodes, node_color='red', node_size=500)
+    plt.title(title)
+    plt.savefig(f"{folder}/step_{step_num}.png")
+    plt.close()
 
 def mis(G, depth=0, visualize=False):
     def find_mis_degree2(G):
@@ -74,9 +89,15 @@ def mis(G, depth=0, visualize=False):
     
     set1 = {max_degree_node} | mis(G_minus_N_v, depth + 1, visualize)
     set2 = mis(G_minus_v, depth + 1, visualize)
-    return set1 if len(set1) > len(set2) else set2
+    
+    final_set = set1 if len(set1) > len(set2) else set2
+    
+    if visualize and depth == 0:
+        visualize_graph(G, "Final Graph with Maximum Independent Set", final_set)
+    
+    return final_set
 
-def global_maximum_independent_set(G):
+def global_maximum_independent_set(G, visualize=False):
     prob = pulp.LpProblem("MaximumIndependentSet", pulp.LpMaximize)
     
     # Create binary variables for each node
@@ -92,9 +113,13 @@ def global_maximum_independent_set(G):
     # Solve the problem
     prob.solve()
     
-    # Return the nodes in the maximum independent set
-    return [node for node in G.nodes() if x[node].value() > 0.5]
-
+    # Get the nodes in the maximum independent set
+    independent_set = [node for node in G.nodes() if x[node].value() > 0.5]
+    
+    if visualize:
+        visualize_graph(G, "Final Graph with Maximum Independent Set", independent_set)
+    
+    return independent_set
 
 # Additional functions to generate specific types of graphs
 
@@ -115,3 +140,37 @@ def generate_tree_graph(num_nodes):
 
 def generate_grid_graph(dim1, dim2):
     return nx.grid_2d_graph(dim1, dim2)
+
+# # Export the main utility functions
+# __all__ = [
+#     'generate_random_graph', 'visualize_graph', 'mis', 'global_maximum_independent_set',
+#     'generate_complete_graph', 'generate_path_graph', 'generate_cycle_graph', 
+#     'generate_star_graph', 'generate_tree_graph', 'generate_grid_graph',
+#     'visualize_graph_and_save', 'mis_and_save', 'visualize_graph_animation', 'mis_with_animation'
+# ]
+
+
+def find_mis(G):
+    # If the maximum degree of G is at most 2
+    if max_degree(G) <= 2:
+        # Return the size of a maximum independent set of G in polynomial time
+        return max_independent_set_degree_2(G)
+
+    # If there exists a vertex v in V with degree 1
+    elif any(vertex_degree(v) == 1 for v in V):
+        v = next(v for v in V if vertex_degree(v) == 1)
+        # Return 1 plus the size of a maximum independent set of G excluding v and its neighbors
+        return 1 + mis(G \ N[v])
+
+    # If G is not connected
+    elif not is_connected(G):
+        G1 = get_connected_component(G)
+        # Return the sum of the sizes of the maximum independent sets of the connected components
+        return mis(G1) + mis(G \ V[G1])
+
+    else:
+        # Select a vertex v with the maximum degree in G
+        v = max_degree_vertex(G)
+        # Return the maximum of (1 plus the size of the maximum independent set of G excluding v and its neighbors) 
+        # and the size of the maximum independent set of G excluding v
+        return max(1 + mis(G \ N[v]), mis(G \ v))
