@@ -141,8 +141,6 @@ def generate_tree_graph(num_nodes):
 def generate_grid_graph(dim1, dim2):
     return nx.grid_2d_graph(dim1, dim2)
 
-
-
 import networkx as nx
 import matplotlib.pyplot as plt
 import os
