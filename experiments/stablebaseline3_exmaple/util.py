@@ -141,13 +141,15 @@ def generate_tree_graph(num_nodes):
 def generate_grid_graph(dim1, dim2):
     return nx.grid_2d_graph(dim1, dim2)
 
+
+
 import networkx as nx
 import matplotlib.pyplot as plt
 import os
 from pathlib import Path
 import datetime
 
-def mis(G, visualize=False, step_by_step=False, run_name=None, verbose=True):
+def mis(G, visualize=False, step_by_step=False, run_name=None, verbose=False):
     output_dir = None
     if visualize:
         if run_name is None:
@@ -159,7 +161,7 @@ def mis(G, visualize=False, step_by_step=False, run_name=None, verbose=True):
             for file in output_dir.glob("step_*.png"):
                 file.unlink()
     
-    step_count = {}
+    step_count = {i: 0 for i in range(1, 11)}
     total_steps = 0
     step_explanations = {
         1: "Checking if the graph has maximum degree at most 2",
@@ -280,7 +282,7 @@ def mis(G, visualize=False, step_by_step=False, run_name=None, verbose=True):
     if visualize:
         visualize_graph(G, mis_result, output_dir)
     
-    return mis_result
+    return mis_result, step_count
 
 def visualize_graph(G, mis_result, output_dir):
     pos = nx.spring_layout(G)
